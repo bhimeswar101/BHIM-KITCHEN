@@ -773,10 +773,12 @@ async function handleApiRequest(req, res, pathname, searchParams) {
           const host = req.headers.host || `localhost:${PORT}`;
           const hostUrl = `${protocol}://${host}`;
 
-          // Send confirmation email to the guest asynchronously with the dynamic hostUrl
-          sendBookingConfirmationEmail(newBooking, hostUrl).catch(err => {
-            console.error('Error sending confirmation email asynchronously:', err);
-          });
+          // Await email sending to prevent serverless environment from freezing before SMTP request completes
+          try {
+            await sendBookingConfirmationEmail(newBooking, hostUrl);
+          } catch (err) {
+            console.error('Error sending confirmation email:', err);
+          }
 
           res.writeHead(201, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true, booking: newBooking }));
